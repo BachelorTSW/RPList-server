@@ -1,0 +1,1 @@
+web:    java -Dserver.port=$PORT $JAVA_OPTS -Xmx250M -Xms210M -Xss256k -XX:MaxMetaspaceSize=100M -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:ReservedCodeCacheSize=80M -XX:+UnlockDiagnosticVMOptions -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -jar target/rplist-server.jar

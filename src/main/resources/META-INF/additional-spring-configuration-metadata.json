@@ -1,0 +1,9 @@
+{
+  "properties": [
+    {
+      "name": "rplist.player.ttlSeconds",
+      "type": "java.lang.Integer",
+      "description": "Amount of seconds after which a player is removed from the list (counting from the last update request)."
+    }
+  ]
+}
