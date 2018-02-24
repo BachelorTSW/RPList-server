@@ -3,6 +3,7 @@ package com.swl.mod.rplist.controller;
 import com.swl.mod.rplist.dto.PlayfieldDto;
 import com.swl.mod.rplist.dto.PlayfieldInstanceDto;
 import com.swl.mod.rplist.dto.UpdateRoleplayerDto;
+import com.swl.mod.rplist.enumerated.Playfield;
 import com.swl.mod.rplist.model.Roleplayer;
 import com.swl.mod.rplist.service.RoleplayerService;
 import org.slf4j.Logger;
@@ -10,14 +11,17 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.Collection;
-import java.util.SortedSet;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static java.util.Arrays.stream;
+import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 import static org.springframework.http.ResponseEntity.badRequest;
 
 @Controller
@@ -31,7 +35,11 @@ public class RoleplayerController {
     private RoleplayerService roleplayerService;
 
     @RequestMapping(value = {"/", "/list"})
-    public String list() {
+    public String list(Model model) {
+        model.addAttribute("zones", stream(Playfield.values())
+                .filter(zone -> !Playfield.UNKNOWN.equals(zone))
+                .sorted(comparing(Playfield::getPriority))
+                .collect(toList()));
         return "list";
     }
 
