@@ -16,6 +16,8 @@ public class PlayfieldDto implements Comparable<PlayfieldDto> {
 
     private SortedSet<PlayfieldInstanceDto> playfieldInstances = new TreeSet<>();
 
+    private int roleplayerCount;
+
     public PlayfieldDto(Playfield playfield) {
         this.playfield = playfield;
     }
@@ -34,6 +36,14 @@ public class PlayfieldDto implements Comparable<PlayfieldDto> {
 
     public void setPlayfieldInstances(SortedSet<PlayfieldInstanceDto> playfieldInstances) {
         this.playfieldInstances = playfieldInstances;
+    }
+
+    public int getRoleplayerCount() {
+        return roleplayerCount;
+    }
+
+    public void setRoleplayerCount(int roleplayerCount) {
+        this.roleplayerCount = roleplayerCount;
     }
 
     @Override

@@ -59,6 +59,7 @@ public class RoleplayerServiceImpl implements RoleplayerService {
                 PlayfieldInstanceDto playfieldInstance = new PlayfieldInstanceDto(playfieldId, ++i, playfieldInstanceEntry.getKey(), playfieldInstanceEntry.getValue());
                 playfieldInstance.getRoleplayers().sort(Comparator.comparing(Roleplayer::getNick));
                 playfield.getPlayfieldInstances().add(playfieldInstance);
+                playfield.setRoleplayerCount(playfield.getRoleplayerCount() + playfieldInstance.getRoleplayers().size());
             }
             playfields.add(playfield);
         }
