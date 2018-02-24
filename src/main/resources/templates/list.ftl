@@ -124,7 +124,7 @@
     var roleplayersListTemplate = $("#roleplayers-list-template").html();
     var compiledTemplate = Handlebars.compile(roleplayersListTemplate);
 
-    setInterval(loadRoleplayerList, 30000);
+    setInterval(loadRoleplayerList, 120000);
     loadRoleplayerList();
 
     function loadRoleplayerList() {
