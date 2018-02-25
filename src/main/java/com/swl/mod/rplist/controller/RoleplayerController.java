@@ -46,7 +46,7 @@ public class RoleplayerController {
     @RequestMapping("/list.json")
     @ResponseBody
     public SortedSet<PlayfieldDto> listJson() {
-        return roleplayerService.getAll(true);
+        return roleplayerService.getAll(false);
     }
 
     @RequestMapping("/update")
