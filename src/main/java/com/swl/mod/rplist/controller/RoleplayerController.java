@@ -2,9 +2,9 @@ package com.swl.mod.rplist.controller;
 
 import com.swl.mod.rplist.dto.PlayfieldDto;
 import com.swl.mod.rplist.dto.PlayfieldInstanceDto;
+import com.swl.mod.rplist.dto.RoleplayerDto;
 import com.swl.mod.rplist.dto.UpdateRoleplayerDto;
 import com.swl.mod.rplist.enumerated.Playfield;
-import com.swl.mod.rplist.model.Roleplayer;
 import com.swl.mod.rplist.service.RoleplayerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.SortedSet;
 import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
@@ -111,12 +112,12 @@ public class RoleplayerController {
         return instance.getPlayfield().getName() + " " + instance.getInstanceNumber() + "=" + roleplayersText;
     }
 
-    private static String roleplayerToString(Roleplayer roleplayer) {
+    private static String roleplayerToString(RoleplayerDto roleplayer) {
         String autoMeetup = "2";
         if (roleplayer.getAutoMeetup() != null) {
             autoMeetup = roleplayer.getAutoMeetup() ? "1" : "0";
         }
-        return roleplayer.getId() + "_" + roleplayer.getNick() + "_" + autoMeetup;
+        return roleplayer.getPlayerId() + "_" + roleplayer.getNick() + "_" + autoMeetup;
     }
 
     @RequestMapping("/list-mod-response")
