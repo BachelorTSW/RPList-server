@@ -25,12 +25,6 @@
             text-align: left;
             padding: 2px 5px;
         }
-        #roleplayers-list .cell-zone {
-            min-width: 16ex;
-        }
-        #roleplayers-list .cell-playername {
-            min-width: 30ex;
-        }
         #roleplayers-list tr.row-dimension-start {
             border-top: 1px solid black;
         }
@@ -84,9 +78,15 @@
         <thead>
         <tr>
             <th class="header-zone">Zone</th>
-            <th class="header-dimension">Dimension</th>
+            <th class="header-dimension">
+                <span class="d-none d-xl-block">Dimension</span>
+                <abbr title="Dimension" class="d-block d-xl-none">Dim</abbr>
+            </th>
             <th class="header-playername">Player name</th>
-            <th class="header-automeetup">Automeetup</th>
+            <th class="header-automeetup">
+                <span class="d-none d-xl-block">Automeetup</span>
+                <abbr title="Automeetup" class="d-block d-xl-none">MU</abbr>
+            </th>
         </tr>
         </thead>
         <tbody>
@@ -100,7 +100,11 @@
                                 {{/if}}
                                 <td rowspan="{{../roleplayers.length}}"><div class="cell-dimension">{{inc @../index}}</div></td>
                             {{/if}}
-                            <td class="roleplayer-name"><div class="cell-playername">{{this.firstName}} "{{this.nick}}" {{this.lastName}}</div></td>
+                            <td class="roleplayer-name">
+                                <div class="cell-playername">
+                                    <span class="d-none d-sm-inline">{{this.firstName}} "</span>{{this.nick}}<span class="d-none d-sm-inline">" {{this.lastName}}</span>
+                                </div>
+                            </td>
                             {{#if this.autoMeetup}}
                                 <td class="roleplayer-automeetup roleplayer-automeetup-on"><div class="cell-automeetup">on</div></td>
                             {{else}}
