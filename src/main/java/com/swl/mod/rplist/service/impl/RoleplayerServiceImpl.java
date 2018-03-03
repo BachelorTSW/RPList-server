@@ -46,17 +46,26 @@ public class RoleplayerServiceImpl implements RoleplayerService {
         List<RoleplayersInSameInstance> roleplayersInSameInstance = roleplayerDao.getRoleplayersInSameInstance();
         for (RoleplayersInSameInstance instance : roleplayersInSameInstance) {
             aggregated.putIfAbsent(instance.root.getPlayfieldId(), new ArrayList<>());
-            boolean alreadyAssigned = aggregated.get(instance.root.getPlayfieldId()).stream()
+            List<Set<Roleplayer>> playfield = aggregated.get(instance.root.getPlayfieldId());
+            boolean alreadyAssigned = playfield.stream()
                     .anyMatch(dimension -> dimension.contains(instance.root));
             if (!alreadyAssigned) {
-                Set<Roleplayer> toAdd = new HashSet<>(instance.inSameInstance);
-                toAdd.add(instance.root);
-                aggregated.get(instance.root.getPlayfieldId()).add(toAdd);
+                Set<Roleplayer> dimension = new HashSet<>(instance.inSameInstance);
+                dimension.add(instance.root);
+                playfield.add(dimension);
             }
         }
         for (Roleplayer roleplayer : roleplayerDao.getRoleplayersInEmptyInstances()) {
             aggregated.putIfAbsent(roleplayer.getPlayfieldId(), new ArrayList<>());
-            aggregated.get(roleplayer.getPlayfieldId()).add(Collections.singleton(roleplayer));
+            List<Set<Roleplayer>> playfield = aggregated.get(roleplayer.getPlayfieldId());
+            if (Playfield.AGARTHA.equals(Playfield.fromId(roleplayer.getPlayfieldId()))) {
+                if (playfield.isEmpty()) {
+                    playfield.add(new HashSet<>());
+                }
+                playfield.get(0).add(roleplayer);
+            } else {
+                playfield.add(Collections.singleton(roleplayer));
+            }
         }
 
         SortedSet<PlayfieldDto> playfields = new TreeSet<>();
