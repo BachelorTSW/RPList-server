@@ -1,17 +1,23 @@
 package com.swl.mod.rplist.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.core.TimeToLive;
-import org.springframework.data.redis.core.index.Indexed;
+import org.neo4j.ogm.annotation.*;
+import org.springframework.data.annotation.Version;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.Set;
 
-@RedisHash("roleplayers")
+@NodeEntity
 public class Roleplayer {
 
     @Id
+    @GeneratedValue
     private Long id;
+
+    @Index(unique = true)
+    private Long playerId;
+
+    @Version
+    private Long version;
 
     private String nick;
 
@@ -19,18 +25,17 @@ public class Roleplayer {
 
     private String lastName;
 
-    @Indexed
     private Integer playfieldId;
 
-    @Indexed
-    private String instanceId;
+    @Relationship(type = "IN_SAME_INSTANCE", direction = Relationship.UNDIRECTED)
+    private Set<Roleplayer> roleplayersInSameInstance;
 
-    private LocalDateTime enteredInstanceAt;
+    private Instant enteredInstanceAt;
 
     private Boolean autoMeetup;
 
-    @TimeToLive
-    private Long timeToLive;
+    @Index
+    private Instant idleOutAt;
 
     public Long getId() {
         return id;
@@ -38,6 +43,22 @@ public class Roleplayer {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getPlayerId() {
+        return playerId;
+    }
+
+    public void setPlayerId(Long playerId) {
+        this.playerId = playerId;
+    }
+
+    public Long getVersion() {
+        return version;
+    }
+
+    public void setVersion(Long version) {
+        this.version = version;
     }
 
     public String getNick() {
@@ -72,19 +93,19 @@ public class Roleplayer {
         this.playfieldId = playfieldId;
     }
 
-    public String getInstanceId() {
-        return instanceId;
+    public Set<Roleplayer> getRoleplayersInSameInstance() {
+        return roleplayersInSameInstance;
     }
 
-    public void setInstanceId(String instanceId) {
-        this.instanceId = instanceId;
+    public void setRoleplayersInSameInstance(Set<Roleplayer> roleplayersInSameInstance) {
+        this.roleplayersInSameInstance = roleplayersInSameInstance;
     }
 
-    public LocalDateTime getEnteredInstanceAt() {
+    public Instant getEnteredInstanceAt() {
         return enteredInstanceAt;
     }
 
-    public void setEnteredInstanceAt(LocalDateTime enteredInstanceAt) {
+    public void setEnteredInstanceAt(Instant enteredInstanceAt) {
         this.enteredInstanceAt = enteredInstanceAt;
     }
 
@@ -96,12 +117,30 @@ public class Roleplayer {
         this.autoMeetup = autoMeetup;
     }
 
-    public Long getTimeToLive() {
-        return timeToLive;
+    public Instant getIdleOutAt() {
+        return idleOutAt;
     }
 
-    public void setTimeToLive(Long timeToLive) {
-        this.timeToLive = timeToLive;
+    public void setIdleOutAt(Instant idleOutAt) {
+        this.idleOutAt = idleOutAt;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+
+        Roleplayer that = (Roleplayer) o;
+
+        return playerId != null ? playerId.equals(that.playerId) : that.playerId == null;
+    }
+
+    @Override
+    public int hashCode() {
+        return playerId != null ? playerId.hashCode() : 0;
+    }
 }

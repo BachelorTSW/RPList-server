@@ -1,7 +1,6 @@
 package com.swl.mod.rplist.dto;
 
 import com.swl.mod.rplist.enumerated.Playfield;
-import com.swl.mod.rplist.model.Roleplayer;
 
 import javax.annotation.Nonnull;
 import java.util.List;
@@ -16,14 +15,11 @@ public class PlayfieldInstanceDto implements Comparable<PlayfieldInstanceDto> {
 
     private int instanceNumber;
 
-    private String instanceId;
+    private List<RoleplayerDto> roleplayers;
 
-    private List<Roleplayer> roleplayers;
-
-    public PlayfieldInstanceDto(Playfield playfield, int instanceNumber, String instanceId, List<Roleplayer> roleplayers) {
+    public PlayfieldInstanceDto(Playfield playfield, int instanceNumber, List<RoleplayerDto> roleplayers) {
         this.playfield = playfield;
         this.instanceNumber = instanceNumber;
-        this.instanceId = instanceId;
         this.roleplayers = roleplayers;
     }
 
@@ -43,19 +39,11 @@ public class PlayfieldInstanceDto implements Comparable<PlayfieldInstanceDto> {
         this.instanceNumber = instanceNumber;
     }
 
-    public String getInstanceId() {
-        return instanceId;
-    }
-
-    public void setInstanceId(String instanceId) {
-        this.instanceId = instanceId;
-    }
-
-    public List<Roleplayer> getRoleplayers() {
+    public List<RoleplayerDto> getRoleplayers() {
         return roleplayers;
     }
 
-    public void setRoleplayers(List<Roleplayer> roleplayers) {
+    public void setRoleplayers(List<RoleplayerDto> roleplayers) {
         this.roleplayers = roleplayers;
     }
 
@@ -79,12 +67,13 @@ public class PlayfieldInstanceDto implements Comparable<PlayfieldInstanceDto> {
 
         PlayfieldInstanceDto that = (PlayfieldInstanceDto) o;
 
-        return instanceId != null ? instanceId.equals(that.instanceId) : that.instanceId == null;
+        return instanceNumber == that.instanceNumber && playfield == that.playfield;
     }
 
     @Override
     public int hashCode() {
-        return instanceId != null ? instanceId.hashCode() : 0;
+        int result = playfield != null ? playfield.hashCode() : 0;
+        result = 31 * result + instanceNumber;
+        return result;
     }
-
 }
