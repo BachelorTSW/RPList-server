@@ -23,7 +23,7 @@ public interface RoleplayerDao extends Neo4jRepository<Roleplayer, Long> {
     void deleteByPlayerId(Long playerId);
 
     @Transactional(readOnly = true)
-    @Query("MATCH (r:Roleplayer)-[:IN_SAME_INSTANCE*..30]-(x:Roleplayer) RETURN r as root, collect(distinct x) as inSameInstance;")
+    @Query("MATCH (r:Roleplayer)-[:IN_SAME_INSTANCE*..10]-(x:Roleplayer) RETURN r as root, collect(distinct x) as inSameInstance;")
     List<RoleplayersInSameInstance> getRoleplayersInSameInstance();
 
     @Transactional(readOnly = true)
