@@ -41,11 +41,11 @@ public class RoleplayerServiceImpl implements RoleplayerService {
 
     @Override
     @Cacheable(value = "roleplayersList")
-    @Transactional(readOnly = true)
     public SortedSet<PlayfieldDto> getAll(boolean includeUnknownZones) {
         try {
             Map<Integer, List<Set<Roleplayer>>> aggregated = new HashMap<>();
             List<RoleplayersInSameInstance> roleplayersInSameInstance = roleplayerDao.getRoleplayersInSameInstance();
+            List<Roleplayer> roleplayersInEmptyInstance = roleplayerDao.getRoleplayersInEmptyInstances();
             for (RoleplayersInSameInstance instance : roleplayersInSameInstance) {
                 aggregated.putIfAbsent(instance.root.getPlayfieldId(), new ArrayList<>());
                 List<Set<Roleplayer>> playfield = aggregated.get(instance.root.getPlayfieldId());
@@ -57,7 +57,7 @@ public class RoleplayerServiceImpl implements RoleplayerService {
                     playfield.add(dimension);
                 }
             }
-            for (Roleplayer roleplayer : roleplayerDao.getRoleplayersInEmptyInstances()) {
+            for (Roleplayer roleplayer : roleplayersInEmptyInstance) {
                 aggregated.putIfAbsent(roleplayer.getPlayfieldId(), new ArrayList<>());
                 List<Set<Roleplayer>> playfield = aggregated.get(roleplayer.getPlayfieldId());
                 if (Playfield.AGARTHA.equals(Playfield.fromId(roleplayer.getPlayfieldId()))) {
