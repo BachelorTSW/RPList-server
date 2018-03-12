@@ -9,6 +9,7 @@ import com.swl.mod.rplist.enumerated.Playfield;
 import com.swl.mod.rplist.model.Roleplayer;
 import com.swl.mod.rplist.model.RoleplayersInSameInstance;
 import com.swl.mod.rplist.service.RoleplayerService;
+import org.neo4j.driver.v1.exceptions.ClientException;
 import org.neo4j.ogm.exception.OptimisticLockingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,106 +43,116 @@ public class RoleplayerServiceImpl implements RoleplayerService {
     @Cacheable(value = "roleplayersList")
     @Transactional(readOnly = true)
     public SortedSet<PlayfieldDto> getAll(boolean includeUnknownZones) {
-        Map<Integer, List<Set<Roleplayer>>> aggregated = new HashMap<>();
-        List<RoleplayersInSameInstance> roleplayersInSameInstance = roleplayerDao.getRoleplayersInSameInstance();
-        for (RoleplayersInSameInstance instance : roleplayersInSameInstance) {
-            aggregated.putIfAbsent(instance.root.getPlayfieldId(), new ArrayList<>());
-            List<Set<Roleplayer>> playfield = aggregated.get(instance.root.getPlayfieldId());
-            boolean alreadyAssigned = playfield.stream()
-                    .anyMatch(dimension -> dimension.contains(instance.root));
-            if (!alreadyAssigned) {
-                Set<Roleplayer> dimension = new HashSet<>(instance.inSameInstance);
-                dimension.add(instance.root);
-                playfield.add(dimension);
-            }
-        }
-        for (Roleplayer roleplayer : roleplayerDao.getRoleplayersInEmptyInstances()) {
-            aggregated.putIfAbsent(roleplayer.getPlayfieldId(), new ArrayList<>());
-            List<Set<Roleplayer>> playfield = aggregated.get(roleplayer.getPlayfieldId());
-            if (Playfield.AGARTHA.equals(Playfield.fromId(roleplayer.getPlayfieldId()))) {
-                if (playfield.isEmpty()) {
-                    playfield.add(new HashSet<>());
+        try {
+            Map<Integer, List<Set<Roleplayer>>> aggregated = new HashMap<>();
+            List<RoleplayersInSameInstance> roleplayersInSameInstance = roleplayerDao.getRoleplayersInSameInstance();
+            for (RoleplayersInSameInstance instance : roleplayersInSameInstance) {
+                aggregated.putIfAbsent(instance.root.getPlayfieldId(), new ArrayList<>());
+                List<Set<Roleplayer>> playfield = aggregated.get(instance.root.getPlayfieldId());
+                boolean alreadyAssigned = playfield.stream()
+                        .anyMatch(dimension -> dimension.contains(instance.root));
+                if (!alreadyAssigned) {
+                    Set<Roleplayer> dimension = new HashSet<>(instance.inSameInstance);
+                    dimension.add(instance.root);
+                    playfield.add(dimension);
                 }
-                playfield.get(0).add(roleplayer);
-            } else {
-                playfield.add(Collections.singleton(roleplayer));
             }
-        }
-
-        SortedSet<PlayfieldDto> playfields = new TreeSet<>();
-        for (Map.Entry<Integer, List<Set<Roleplayer>>> playfieldEntry : aggregated.entrySet()) {
-            Playfield playfieldId = Playfield.fromId(playfieldEntry.getKey());
-            if (playfieldId == null) {
-                if (includeUnknownZones) {
-                    playfieldId = Playfield.UNKNOWN;
+            for (Roleplayer roleplayer : roleplayerDao.getRoleplayersInEmptyInstances()) {
+                aggregated.putIfAbsent(roleplayer.getPlayfieldId(), new ArrayList<>());
+                List<Set<Roleplayer>> playfield = aggregated.get(roleplayer.getPlayfieldId());
+                if (Playfield.AGARTHA.equals(Playfield.fromId(roleplayer.getPlayfieldId()))) {
+                    if (playfield.isEmpty()) {
+                        playfield.add(new HashSet<>());
+                    }
+                    playfield.get(0).add(roleplayer);
                 } else {
-                    continue;
+                    playfield.add(Collections.singleton(roleplayer));
                 }
             }
-            PlayfieldDto playfield = new PlayfieldDto(playfieldId);
-            playfieldEntry.getValue().sort(Comparator.comparing(Set::size));
-            int i = 0;
-            for (Set<Roleplayer> instanceRoleplayers : playfieldEntry.getValue()) {
-                PlayfieldInstanceDto playfieldInstance = new PlayfieldInstanceDto(
-                        playfieldId,
-                        ++i,
-                        instanceRoleplayers.stream()
-                                .sorted(Comparator.comparing(Roleplayer::getNick))
-                                .map(RoleplayerDto::new)
-                                .collect(toList())
-                );
-                playfield.getPlayfieldInstances().add(playfieldInstance);
-                playfield.setRoleplayerCount(playfield.getRoleplayerCount() + playfieldInstance.getRoleplayers().size());
-            }
-            playfields.add(playfield);
-        }
 
-        return playfields;
+            SortedSet<PlayfieldDto> playfields = new TreeSet<>();
+            for (Map.Entry<Integer, List<Set<Roleplayer>>> playfieldEntry : aggregated.entrySet()) {
+                Playfield playfieldId = Playfield.fromId(playfieldEntry.getKey());
+                if (playfieldId == null) {
+                    if (includeUnknownZones) {
+                        playfieldId = Playfield.UNKNOWN;
+                    } else {
+                        continue;
+                    }
+                }
+                PlayfieldDto playfield = new PlayfieldDto(playfieldId);
+                playfieldEntry.getValue().sort(Comparator.comparing(Set::size));
+                int i = 0;
+                for (Set<Roleplayer> instanceRoleplayers : playfieldEntry.getValue()) {
+                    PlayfieldInstanceDto playfieldInstance = new PlayfieldInstanceDto(
+                            playfieldId,
+                            ++i,
+                            instanceRoleplayers.stream()
+                                    .sorted(Comparator.comparing(Roleplayer::getNick))
+                                    .map(RoleplayerDto::new)
+                                    .collect(toList())
+                    );
+                    playfield.getPlayfieldInstances().add(playfieldInstance);
+                    playfield.setRoleplayerCount(playfield.getRoleplayerCount() + playfieldInstance.getRoleplayers().size());
+                }
+                playfields.add(playfield);
+            }
+
+            return playfields;
+        } catch (ClientException e) {
+            logger.error("Unable to get list of roleplayers", e);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     @Retryable(include = OptimisticLockingException.class, backoff = @Backoff(10))
     public void update(UpdateRoleplayerDto updateRoleplayerDto) {
-        StopWatch stopWatch = new StopWatch("Updating roleplayer");
-        stopWatch.start("Updating player");
-        boolean shouldClearInstance = updateRoleplayerDto.isClearInstance();
+        try {
+            StopWatch stopWatch = new StopWatch("Updating roleplayer");
+            stopWatch.start("Updating player");
+            boolean shouldClearInstance = updateRoleplayerDto.isClearInstance();
 
-        Roleplayer currentPlayer = createIfNotExists(updateRoleplayerDto.getPlayerId(), updateRoleplayerDto.getNick(),
-                updateRoleplayerDto.getFirstName(), updateRoleplayerDto.getLastName());
+            Roleplayer currentPlayer = createIfNotExists(updateRoleplayerDto.getPlayerId(), updateRoleplayerDto.getNick(),
+                    updateRoleplayerDto.getFirstName(), updateRoleplayerDto.getLastName());
 
-        // If the stored playfield id is different than the current one, then the player had to change zones since last update
-        if (currentPlayer.getPlayfieldId() == null || !currentPlayer.getPlayfieldId().equals(updateRoleplayerDto.getPlayfieldId())) {
-            shouldClearInstance = true;
-        }
-        currentPlayer.setPlayfieldId(updateRoleplayerDto.getPlayfieldId());
-
-        if (shouldClearInstance) {
-            if (currentPlayer.getRoleplayersInSameInstance() != null) {
-                currentPlayer.getRoleplayersInSameInstance().clear();
+            // If the stored playfield id is different than the current one, then the player had to change zones since last update
+            if (currentPlayer.getPlayfieldId() == null || !currentPlayer.getPlayfieldId().equals(updateRoleplayerDto.getPlayfieldId())) {
+                shouldClearInstance = true;
             }
-            currentPlayer.setEnteredInstanceAt(Instant.now());
-        }
+            currentPlayer.setPlayfieldId(updateRoleplayerDto.getPlayfieldId());
 
-        currentPlayer.setAutoMeetup(updateRoleplayerDto.getAutoMeetup());
+            if (shouldClearInstance) {
+                if (currentPlayer.getRoleplayersInSameInstance() != null) {
+                    currentPlayer.getRoleplayersInSameInstance().clear();
+                }
+                currentPlayer.setEnteredInstanceAt(Instant.now());
+            }
 
-        stopWatch.stop();
+            currentPlayer.setAutoMeetup(updateRoleplayerDto.getAutoMeetup());
 
-        Set<Roleplayer> visibleRoleplayers = new HashSet<>();
-        visibleRoleplayers.add(currentPlayer);
-        // Mark the player as in same instance as the supplied other players (but ignore in Agartha)
-        if (!shouldClearInstance && Playfield.AGARTHA.getPlayfieldId() != updateRoleplayerDto.getPlayfieldId()
-                && updateRoleplayerDto.getPlayers() != null && !updateRoleplayerDto.getPlayers().isEmpty()) {
-            visibleRoleplayers.addAll(roleplayerDao.findAllByPlayerIdIn(updateRoleplayerDto.getPlayers()));
-            markInSameInstance(currentPlayer.getPlayfieldId(), visibleRoleplayers, stopWatch);
-        }
+            stopWatch.stop();
 
-        stopWatch.start("Saving refreshed players");
-        saveRefreshed(visibleRoleplayers);
-        stopWatch.stop();
+            Set<Roleplayer> visibleRoleplayers = new HashSet<>();
+            visibleRoleplayers.add(currentPlayer);
+            // Mark the player as in same instance as the supplied other players (but ignore in Agartha)
+            if (!shouldClearInstance && Playfield.AGARTHA.getPlayfieldId() != updateRoleplayerDto.getPlayfieldId()
+                    && updateRoleplayerDto.getPlayers() != null && !updateRoleplayerDto.getPlayers().isEmpty()) {
+                visibleRoleplayers.addAll(roleplayerDao.findAllByPlayerIdIn(updateRoleplayerDto.getPlayers()));
+                markInSameInstance(currentPlayer.getPlayfieldId(), visibleRoleplayers, stopWatch);
+            }
 
-        if (stopWatch.getTotalTimeMillis() > 500 && logger.isWarnEnabled()) {
-            logger.warn("Roleplayer list update took {}s: {}", stopWatch.getTotalTimeSeconds(), stopWatch.prettyPrint());
+            stopWatch.start("Saving refreshed players");
+            saveRefreshed(visibleRoleplayers);
+            stopWatch.stop();
+
+            if (stopWatch.getTotalTimeMillis() > 500 && logger.isWarnEnabled()) {
+                logger.warn("Roleplayer list update took {}s: {}", stopWatch.getTotalTimeSeconds(), stopWatch.prettyPrint());
+            }
+        } catch (ClientException e) {
+            logger.error("Unable to update roleplayer {} (id {})", updateRoleplayerDto.getNick(), updateRoleplayerDto.getPlayerId(), e);
+            throw e;
         }
     }
 
@@ -149,16 +160,26 @@ public class RoleplayerServiceImpl implements RoleplayerService {
     @Transactional
     @Retryable(include = OptimisticLockingException.class, backoff = @Backoff(10))
     public void remove(Long playerId) {
-        roleplayerDao.deleteByPlayerId(playerId);
+        try {
+            roleplayerDao.deleteByPlayerId(playerId);
+        } catch (ClientException e) {
+            logger.error("Unable to delete roleplayer {}", playerId, e);
+            throw e;
+        }
     }
 
     @Override
     @Transactional
     @Retryable(include = OptimisticLockingException.class, backoff = @Backoff(10))
     public int removeIdle() {
-        List<Roleplayer> idledOut = roleplayerDao.findAllByIdleOutAtBefore(Instant.now());
-        roleplayerDao.deleteAll(idledOut);
-        return idledOut.size();
+        try {
+            List<Roleplayer> idledOut = roleplayerDao.findAllByIdleOutAtBefore(Instant.now());
+            roleplayerDao.deleteAll(idledOut);
+            return idledOut.size();
+        } catch (ClientException e) {
+            logger.error("Unable to delete idle roleplayers", e);
+            throw e;
+        }
     }
 
     protected void markInSameInstance(Integer playfieldId, Set<Roleplayer> roleplayers, StopWatch stopWatch) {
