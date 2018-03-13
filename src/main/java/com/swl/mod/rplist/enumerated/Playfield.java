@@ -11,6 +11,7 @@ public enum Playfield {
     UNKNOWN("Unknown", 0, 100000),
 
     LONDON("London", 1000, 100),
+    CRUSADES("London - Crusades", 7160, 105),
     TABULA_RASA("London - Tabula Rasa", 7080, 110),
     ALBION("London - Albion", 7070, 130),
     ALBION_REHEARSAL("London - Albion Rehearsal Stage", 7075, 135),
