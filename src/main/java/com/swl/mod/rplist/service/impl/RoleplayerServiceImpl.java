@@ -40,7 +40,7 @@ public class RoleplayerServiceImpl implements RoleplayerService {
     private RoleplayerDao roleplayerDao;
 
     @Override
-    @Cacheable(value = "roleplayersList")
+    @Cacheable(value = "roleplayersList", sync = true)
     public SortedSet<PlayfieldDto> getAll(boolean includeUnknownZones) {
         try {
             Map<Integer, List<Set<Roleplayer>>> aggregated = new HashMap<>();
