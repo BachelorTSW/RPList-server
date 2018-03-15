@@ -147,7 +147,7 @@ public class RoleplayerServiceImpl implements RoleplayerService {
             saveRefreshed(visibleRoleplayers);
             stopWatch.stop();
 
-            if (stopWatch.getTotalTimeMillis() > 500 && logger.isWarnEnabled()) {
+            if (stopWatch.getTotalTimeMillis() > 1000 && logger.isWarnEnabled()) {
                 logger.warn("Roleplayer list update took {}s: {}", stopWatch.getTotalTimeSeconds(), stopWatch.prettyPrint());
             }
         } catch (ClientException e) {
