@@ -22,6 +22,8 @@ public enum Playfield {
 
     THE_SUNKEN_LIBRARY("The Sunken Library", 1300, 400),
 
+    NEW_DAWN("New Dawn", 7800, 800),
+
     AGARTHA("Agartha", 5060, 1000),
 
     KINGSMOUTH("Kingsmouth", 3030, 1100),
