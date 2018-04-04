@@ -15,7 +15,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * Core configuration.
  */
 @Configuration
-@Import({MvcConfig.class})
+@Import({MvcConfig.class, SecurityConfig.class})
 @EntityScan(basePackageClasses = Roleplayer.class)
 @ComponentScan(basePackageClasses = RoleplayerDao.class)
 @EnableNeo4jRepositories(basePackageClasses = RoleplayerDao.class)
