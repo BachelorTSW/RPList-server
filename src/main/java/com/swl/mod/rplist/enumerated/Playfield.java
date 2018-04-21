@@ -19,6 +19,7 @@ public enum Playfield {
     NEW_YORK("New York", 1100, 200),
 
     SEOUL("Seoul", 1200, 300),
+    SEOUL_FIGHT_CLUB("Seoul Fight Club", 5811, 350),
 
     THE_SUNKEN_LIBRARY("The Sunken Library", 1300, 400),
 
