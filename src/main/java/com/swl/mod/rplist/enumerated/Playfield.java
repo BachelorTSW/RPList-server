@@ -15,6 +15,7 @@ public enum Playfield {
     TABULA_RASA("London - Tabula Rasa", 7080, 110),
     ALBION("London - Albion", 7070, 130),
     ALBION_REHEARSAL("London - Albion Rehearsal Stage", 7075, 135),
+    MUSEUM("British Museum of the Occult", 7190, 150),
 
     NEW_YORK("New York", 1100, 200),
 
