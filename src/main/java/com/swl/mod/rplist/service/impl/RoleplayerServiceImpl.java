@@ -118,6 +118,7 @@ public class RoleplayerServiceImpl implements RoleplayerService {
             visibleRoleplayers.add(currentPlayer);
             updateRoleplayerDto.getPlayers().stream()
                     .map(roleplayerDao::findByPlayerId)
+                    .filter(Objects::nonNull)
                     .forEach(visibleRoleplayers::add);
             markInSameInstance(currentPlayer.getPlayfieldId(), visibleRoleplayers, stopWatch);
         }
@@ -157,6 +158,7 @@ public class RoleplayerServiceImpl implements RoleplayerService {
         List<Roleplayer> affectedRoleplayers = instancesToMerge.stream()
                 .map(instance -> roleplayerDao.findAllByPlayfieldIdAndInstanceId(playfieldId, instance))
                 .flatMap(Collection::stream)
+                .filter(Objects::nonNull)
                 .collect(toList());
         affectedRoleplayers.forEach(r -> r.setInstanceId(targetInstance));
         roleplayerDao.saveAll(affectedRoleplayers);
@@ -164,9 +166,11 @@ public class RoleplayerServiceImpl implements RoleplayerService {
 
     private Integer findInstanceWithMostRoleplayers(Integer playfieldId, Set<Integer> instances) {
         Integer largestInstance = 0;
-        int largestInstanceSize = 0;
+        long largestInstanceSize = 0;
         for (Integer instance: instances) {
-            int instanceSize = roleplayerDao.findAllByPlayfieldIdAndInstanceId(playfieldId, instance).size();
+            long instanceSize = roleplayerDao.findAllByPlayfieldIdAndInstanceId(playfieldId, instance).stream()
+                    .filter(Objects::nonNull)
+                    .count();
             if (instanceSize > largestInstanceSize) {
                 largestInstance = instance;
                 largestInstanceSize = instanceSize;
