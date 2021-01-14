@@ -2,13 +2,13 @@ package com.swl.mod.rplist.config;
 
 import com.swl.mod.rplist.dao.RoleplayerDao;
 import com.swl.mod.rplist.model.Roleplayer;
-import com.swl.mod.rplist.scheduled.IdleRoleplayersCleaner;
 import com.swl.mod.rplist.service.RoleplayerService;
 import com.swl.mod.rplist.service.impl.RoleplayerServiceImpl;
+import org.springframework.boot.autoconfigure.data.redis.LettuceClientConfigurationBuilderCustomizer;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.*;
 import org.springframework.core.task.AsyncTaskExecutor;
-import org.springframework.data.neo4j.repository.config.EnableNeo4jRepositories;
+import org.springframework.data.redis.repository.configuration.EnableRedisRepositories;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 /**
@@ -18,17 +18,12 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 @Import({MvcConfig.class, SecurityConfig.class})
 @EntityScan(basePackageClasses = Roleplayer.class)
 @ComponentScan(basePackageClasses = RoleplayerDao.class)
-@EnableNeo4jRepositories(basePackageClasses = RoleplayerDao.class)
+@EnableRedisRepositories(basePackageClasses = RoleplayerDao.class)
 public class Config {
 
     @Bean
     public RoleplayerService roleplayerService() {
         return new RoleplayerServiceImpl();
-    }
-
-    @Bean
-    public IdleRoleplayersCleaner idleRoleplayersCleaner() {
-        return new IdleRoleplayersCleaner();
     }
 
     @Bean
@@ -46,6 +41,15 @@ public class Config {
         executor.setMaxPoolSize(10);
         executor.setThreadNamePrefix("Exec-");
         return executor;
+    }
+
+    @Bean
+    public LettuceClientConfigurationBuilderCustomizer lettuceClientConfigurationBuilderCustomizer() {
+        return clientConfigurationBuilder -> {
+            if (clientConfigurationBuilder.build().isUseSsl()) {
+                clientConfigurationBuilder.useSsl().disablePeerVerification();
+            }
+        };
     }
 
 }

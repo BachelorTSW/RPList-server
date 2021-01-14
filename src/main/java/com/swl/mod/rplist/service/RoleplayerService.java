@@ -16,6 +16,4 @@ public interface RoleplayerService {
 
     void remove(Long playerId);
 
-    int removeIdle();
-
 }

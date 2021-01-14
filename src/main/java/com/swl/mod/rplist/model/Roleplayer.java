@@ -1,23 +1,18 @@
 package com.swl.mod.rplist.model;
 
-import org.neo4j.ogm.annotation.*;
-import org.springframework.data.annotation.Version;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.TimeToLive;
+import org.springframework.data.redis.core.index.Indexed;
 
 import java.time.Instant;
-import java.util.Set;
 
-@NodeEntity
+@RedisHash("roleplayers")
 public class Roleplayer {
 
     @Id
-    @GeneratedValue
-    private Long id;
-
-    @Index(unique = true)
+    @Indexed
     private Long playerId;
-
-    @Version
-    private Long version;
 
     private String nick;
 
@@ -25,25 +20,18 @@ public class Roleplayer {
 
     private String lastName;
 
+    @Indexed
     private Integer playfieldId;
 
-    @Relationship(type = "IN_SAME_INSTANCE", direction = Relationship.UNDIRECTED)
-    private Set<Roleplayer> roleplayersInSameInstance;
+    @Indexed
+    private Integer instanceId;
 
     private Instant enteredInstanceAt;
 
     private Boolean autoMeetup;
 
-    @Index
-    private Instant idleOutAt;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
+    @TimeToLive
+    private Long timeToLive;
 
     public Long getPlayerId() {
         return playerId;
@@ -51,14 +39,6 @@ public class Roleplayer {
 
     public void setPlayerId(Long playerId) {
         this.playerId = playerId;
-    }
-
-    public Long getVersion() {
-        return version;
-    }
-
-    public void setVersion(Long version) {
-        this.version = version;
     }
 
     public String getNick() {
@@ -93,12 +73,12 @@ public class Roleplayer {
         this.playfieldId = playfieldId;
     }
 
-    public Set<Roleplayer> getRoleplayersInSameInstance() {
-        return roleplayersInSameInstance;
+    public Integer getInstanceId() {
+        return instanceId;
     }
 
-    public void setRoleplayersInSameInstance(Set<Roleplayer> roleplayersInSameInstance) {
-        this.roleplayersInSameInstance = roleplayersInSameInstance;
+    public void setInstanceId(Integer instanceId) {
+        this.instanceId = instanceId;
     }
 
     public Instant getEnteredInstanceAt() {
@@ -117,12 +97,12 @@ public class Roleplayer {
         this.autoMeetup = autoMeetup;
     }
 
-    public Instant getIdleOutAt() {
-        return idleOutAt;
+    public Long getTimeToLive() {
+        return timeToLive;
     }
 
-    public void setIdleOutAt(Instant idleOutAt) {
-        this.idleOutAt = idleOutAt;
+    public void setTimeToLive(Long timeToLive) {
+        this.timeToLive = timeToLive;
     }
 
     @Override
