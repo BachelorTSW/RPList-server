@@ -19,6 +19,4 @@ public interface RoleplayerDao extends CrudRepository<Roleplayer, Long> {
     // Currently not supported by Redis
 //    int countAllByPlayfieldIdAndInstanceId(Integer playfieldId, Integer instanceId);
 
-    void deleteByPlayerId(Long playerId);
-
 }

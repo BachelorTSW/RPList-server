@@ -2,7 +2,6 @@ package com.swl.mod.rplist.model;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.core.TimeToLive;
 import org.springframework.data.redis.core.index.Indexed;
 
 import java.time.Instant;
@@ -30,8 +29,8 @@ public class Roleplayer {
 
     private Boolean autoMeetup;
 
-    @TimeToLive
-    private Long timeToLive;
+    @Indexed
+    private Instant idleOutAt;
 
     public Long getPlayerId() {
         return playerId;
@@ -97,12 +96,12 @@ public class Roleplayer {
         this.autoMeetup = autoMeetup;
     }
 
-    public Long getTimeToLive() {
-        return timeToLive;
+    public Instant getIdleOutAt() {
+        return idleOutAt;
     }
 
-    public void setTimeToLive(Long timeToLive) {
-        this.timeToLive = timeToLive;
+    public void setIdleOutAt(Instant idleOutAt) {
+        this.idleOutAt = idleOutAt;
     }
 
     @Override

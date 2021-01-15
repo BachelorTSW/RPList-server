@@ -2,6 +2,7 @@ package com.swl.mod.rplist.config;
 
 import com.swl.mod.rplist.dao.RoleplayerDao;
 import com.swl.mod.rplist.model.Roleplayer;
+import com.swl.mod.rplist.scheduled.IdleRoleplayersCleaner;
 import com.swl.mod.rplist.service.RoleplayerService;
 import com.swl.mod.rplist.service.impl.RoleplayerServiceImpl;
 import org.springframework.boot.autoconfigure.data.redis.LettuceClientConfigurationBuilderCustomizer;
@@ -24,6 +25,11 @@ public class Config {
     @Bean
     public RoleplayerService roleplayerService() {
         return new RoleplayerServiceImpl();
+    }
+
+    @Bean
+    public IdleRoleplayersCleaner idleRoleplayersCleaner() {
+        return new IdleRoleplayersCleaner();
     }
 
     @Bean

@@ -13,7 +13,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
 
 import java.security.SecureRandom;
@@ -131,7 +134,19 @@ public class RoleplayerServiceImpl implements RoleplayerService {
     @Override
 //    @Transactional
     public void remove(Long playerId) {
-        roleplayerDao.deleteByPlayerId(playerId);
+        roleplayerDao.deleteById(playerId);
+    }
+
+    @Override
+//    @Transactional
+    public int removeIdle() {
+        Instant now = Instant.now();
+        List<Roleplayer> idledOut = stream(roleplayerDao.findAll().spliterator(), false)
+                .filter(Objects::nonNull)
+                .filter(r -> r.getIdleOutAt().isBefore(now))
+                .collect(toList());
+        roleplayerDao.deleteAll(idledOut);
+        return idledOut.size();
     }
 
     protected void markInSameInstance(Integer playfieldId, Collection<Roleplayer> roleplayers, StopWatch stopWatch) {
@@ -185,18 +200,18 @@ public class RoleplayerServiceImpl implements RoleplayerService {
             roleplayer = new Roleplayer();
             roleplayer.setPlayerId(updateRoleplayerDto.getPlayerId());
             roleplayer.setEnteredInstanceAt(Instant.now());
-            roleplayer.setTimeToLive(playerTtl);
         }
 
         roleplayer.setNick(updateRoleplayerDto.getNick());
         roleplayer.setFirstName(updateRoleplayerDto.getFirstName());
         roleplayer.setLastName(updateRoleplayerDto.getLastName());
 
-        return roleplayerDao.save(roleplayer);
+        return roleplayer;
     }
 
     private void saveRefreshed(Roleplayer roleplayer) {
-        roleplayer.setTimeToLive(playerTtl);
+        Instant idleOutAt = Instant.now().plus(playerTtl, ChronoUnit.SECONDS);
+        roleplayer.setIdleOutAt(idleOutAt);
         roleplayerDao.save(roleplayer);
     }
 
