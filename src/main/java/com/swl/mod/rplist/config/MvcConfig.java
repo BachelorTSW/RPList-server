@@ -1,5 +1,6 @@
 package com.swl.mod.rplist.config;
 
+import com.swl.mod.rplist.controller.RobotsController;
 import com.swl.mod.rplist.controller.VersionController;
 import com.swl.mod.rplist.controller.RoleplayerController;
 import org.springframework.context.annotation.Bean;
@@ -19,6 +20,11 @@ public class MvcConfig {
     @Bean
     public RoleplayerController roleplayerController() {
         return new RoleplayerController();
+    }
+
+    @Bean
+    public RobotsController robotsController() {
+        return new RobotsController();
     }
 
 }
