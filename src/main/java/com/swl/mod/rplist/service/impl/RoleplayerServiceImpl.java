@@ -93,36 +93,41 @@ public class RoleplayerServiceImpl implements RoleplayerService {
 //    @Transactional
     public void update(UpdateRoleplayerDto updateRoleplayerDto) {
         StopWatch stopWatch = new StopWatch("Updating roleplayer");
-        stopWatch.start("Updating player");
+
         boolean shouldClearInstance = updateRoleplayerDto.isClearInstance();
 
+        stopWatch.start("Getting/creating player entity");
         Roleplayer currentPlayer = createIfNotExists(updateRoleplayerDto);
+        stopWatch.stop();
 
+        stopWatch.start("Updating player entity");
         // If the stored playfieldId is different than the current one, the player had to change zones since last update
         if (currentPlayer.getPlayfieldId() == null || !currentPlayer.getPlayfieldId().equals(updateRoleplayerDto.getPlayfieldId())) {
             shouldClearInstance = true;
         }
         currentPlayer.setPlayfieldId(updateRoleplayerDto.getPlayfieldId());
-
         if (shouldClearInstance) {
             currentPlayer.setInstanceId(random.nextInt());
             currentPlayer.setEnteredInstanceAt(Instant.now());
         }
-
         currentPlayer.setAutoMeetup(updateRoleplayerDto.getAutoMeetup());
-        saveRefreshed(currentPlayer);
+        stopWatch.stop();
 
+        stopWatch.start("Saving updated player entity");
+        saveRefreshed(currentPlayer);
         stopWatch.stop();
 
         // Mark the player as in same instance as the supplied other players (but ignore in Agartha)
         if (!shouldClearInstance && Playfield.AGARTHA.getPlayfieldId() != updateRoleplayerDto.getPlayfieldId()
                 && updateRoleplayerDto.getPlayers() != null && !updateRoleplayerDto.getPlayers().isEmpty()) {
+            stopWatch.start("Compiling list of players to be marked as in same instance");
             Set<Roleplayer> visibleRoleplayers = new HashSet<>();
             visibleRoleplayers.add(currentPlayer);
             updateRoleplayerDto.getPlayers().stream()
                     .map(roleplayerDao::findByPlayerId)
                     .filter(Objects::nonNull)
                     .forEach(visibleRoleplayers::add);
+            stopWatch.stop();
             markInSameInstance(currentPlayer.getPlayfieldId(), visibleRoleplayers, stopWatch);
         }
 
@@ -150,22 +155,26 @@ public class RoleplayerServiceImpl implements RoleplayerService {
     }
 
     protected void markInSameInstance(Integer playfieldId, Collection<Roleplayer> roleplayers, StopWatch stopWatch) {
-        stopWatch.start("Marking players to be in same instance");
+        stopWatch.start("Filtering players to be marked as in same instance");
         Instant enteredInstanceThreshold = Instant.now().minus(2, ChronoUnit.MINUTES);
         Set<Integer> instancesToMerge = roleplayers.stream()
                 .filter(r -> playfieldId.equals(r.getPlayfieldId()))
                 .filter(r -> enteredInstanceThreshold.isAfter(r.getEnteredInstanceAt()))
                 .map(Roleplayer::getInstanceId)
                 .collect(toSet());
+        stopWatch.stop();
 
         if (instancesToMerge.size() < 2) {
             return;
         }
 
+        stopWatch.start("Ascertaining largest instance");
         Integer largestInstance = findInstanceWithMostRoleplayers(playfieldId, instancesToMerge);
         instancesToMerge.remove(largestInstance);
-        mergeInstancesInto(playfieldId, largestInstance, instancesToMerge);
+        stopWatch.stop();
 
+        stopWatch.start("Merging instances");
+        mergeInstancesInto(playfieldId, largestInstance, instancesToMerge);
         stopWatch.stop();
     }
 
