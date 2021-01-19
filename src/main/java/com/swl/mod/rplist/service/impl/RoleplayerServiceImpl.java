@@ -145,12 +145,20 @@ public class RoleplayerServiceImpl implements RoleplayerService {
     @Override
 //    @Transactional
     public int removeIdle() {
+        StopWatch stopWatch = new StopWatch();
+        stopWatch.start();
         Instant now = Instant.now();
         List<Roleplayer> idledOut = stream(roleplayerDao.findAll().spliterator(), false)
                 .filter(Objects::nonNull)
                 .filter(r -> r.getIdleOutAt().isBefore(now))
                 .collect(toList());
         roleplayerDao.deleteAll(idledOut);
+        stopWatch.stop();
+
+        if (!idledOut.isEmpty() || stopWatch.getTotalTimeMillis() > 1000) {
+            logger.info("Cleaned {} idle roleplayers, {} active left; cleanup took {}s",
+                    idledOut.size(), roleplayerDao.count(), stopWatch.getTotalTimeSeconds());
+        }
         return idledOut.size();
     }
 
