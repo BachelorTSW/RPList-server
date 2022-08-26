@@ -40,7 +40,7 @@
 </script>
 
 <#-- Modal for creating a notification -->
-<#include "create-notification-modal.ftl">
+<#include "create-notification-modal.ftlh">
 
 
 <script type="application/javascript">

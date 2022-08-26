@@ -52,7 +52,7 @@
     <div class="row">
         <div id="roleplayers-list" class="col"></div>
         <div id="notifications-container" class="col-lg-4 col-xl-4 d-none d-lg-block">
-            <#include "includes/notifications-card.ftl">
+            <#include "includes/notifications-card.ftlh">
         </div>
     </div>
 </div>
