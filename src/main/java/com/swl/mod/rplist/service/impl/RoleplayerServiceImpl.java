@@ -13,10 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StopWatch;
 
 import java.security.SecureRandom;
@@ -45,6 +42,7 @@ public class RoleplayerServiceImpl implements RoleplayerService {
     @Override
     @Cacheable(value = "roleplayersList", sync = true)
     public SortedSet<PlayfieldDto> getAll(boolean includeUnknownZones) {
+        removeIdle();
         Map<Playfield, Map<Integer, List<Roleplayer>>> roleplayersInPlayfields =
                 stream(roleplayerDao.findAll().spliterator(), false)
                         .filter(Objects::nonNull)

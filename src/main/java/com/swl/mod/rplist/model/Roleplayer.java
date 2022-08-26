@@ -1,16 +1,13 @@
 package com.swl.mod.rplist.model;
 
-import org.springframework.data.annotation.Id;
-import org.springframework.data.redis.core.RedisHash;
-import org.springframework.data.redis.core.index.Indexed;
-
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import java.time.Instant;
 
-@RedisHash("roleplayers")
+@Entity
 public class Roleplayer {
 
     @Id
-    @Indexed
     private Long playerId;
 
     private String nick;
@@ -19,17 +16,14 @@ public class Roleplayer {
 
     private String lastName;
 
-    @Indexed
     private Integer playfieldId;
 
-    @Indexed
     private Integer instanceId;
 
     private Instant enteredInstanceAt;
 
     private Boolean autoMeetup;
 
-    @Indexed
     private Instant idleOutAt;
 
     public Long getPlayerId() {
