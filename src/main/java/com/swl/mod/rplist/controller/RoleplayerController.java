@@ -1,42 +1,47 @@
 package com.swl.mod.rplist.controller;
 
-import com.swl.mod.rplist.dto.PlayfieldDto;
-import com.swl.mod.rplist.dto.PlayfieldInstanceDto;
-import com.swl.mod.rplist.dto.RoleplayerDto;
-import com.swl.mod.rplist.dto.UpdateRoleplayerDto;
 import com.swl.mod.rplist.enumerated.Playfield;
-import com.swl.mod.rplist.service.RoleplayerService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.client.RestTemplate;
 
-import java.util.Collection;
-import java.util.SortedSet;
-import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 import static java.util.Arrays.stream;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
-import static org.springframework.http.ResponseEntity.badRequest;
 
 @Controller
 public class RoleplayerController {
 
-    private static final int SWL_SUPPORTED_URL_LENGTH = 15381;
-
-    private final Logger logger = LoggerFactory.getLogger(this.getClass());
+    @Value("${redirect.domain}")
+    private String redirectDomain;
 
     @Autowired
-    private RoleplayerService roleplayerService;
+    private RestTemplate proxyRestTemplate;
+
+    private <T> ResponseEntity<T> proxyCall(HttpServletRequest request, HttpMethod method, String body, Class<T> responseType) {
+        try {
+            URI uri = new URI("http", null, redirectDomain, 80, request.getRequestURI(), request.getQueryString(), null);
+            return proxyRestTemplate.exchange(uri, method, new HttpEntity<>(body), responseType);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
 
     @RequestMapping(value = {"/", "/list"})
     public String list(Model model) {
+        // TODO: http redirect
         model.addAttribute("zones", stream(Playfield.values())
                 .filter(zone -> !Playfield.UNKNOWN.equals(zone))
                 .sorted(comparing(Playfield::getPriority))
@@ -46,78 +51,25 @@ public class RoleplayerController {
 
     @RequestMapping("/list.json")
     @ResponseBody
-    public SortedSet<PlayfieldDto> listJson() {
-        return roleplayerService.getAll(false);
+    public ResponseEntity<String> listJson(HttpServletRequest request, HttpMethod method, @RequestBody(required = false) String body) {
+        return proxyCall(request, method, body, String.class);
     }
 
     @RequestMapping("/update")
     @ResponseBody
-    public ResponseEntity<String> update(UpdateRoleplayerDto updateRoleplayerDto) {
-        if (updateRoleplayerDto.getPlayerId() == null) {
-            return badRequest().body("No playerId found in the request.");
-        }
-        if (updateRoleplayerDto.getNick() == null) {
-            return badRequest().body("No nick found in the request.");
-        }
-        if (updateRoleplayerDto.getFirstName() == null) {
-            return badRequest().body("No firstName found in the request.");
-        }
-        if (updateRoleplayerDto.getLastName() == null) {
-            return badRequest().body("No lastName found in the request.");
-        }
-        if (updateRoleplayerDto.getPlayfieldId() == null) {
-            return badRequest().body("No playfieldId found in the request.");
-        }
-
-        roleplayerService.update(updateRoleplayerDto);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> update(HttpServletRequest request, HttpMethod method, @RequestBody(required = false) String body) {
+        return proxyCall(request, method, body, String.class);
     }
 
     @RequestMapping("/remove")
     @ResponseBody
-    public ResponseEntity<String> remove(@RequestParam("playerId") Long playerId) {
-        roleplayerService.remove(playerId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<String> remove(HttpServletRequest request, HttpMethod method, @RequestBody(required = false) String body) {
+        return proxyCall(request, method, body, String.class);
     }
 
     @RequestMapping("/list-mod")
-    public String listMod() {
-        String query = "List of roleplayers temporarily unavailable=1_Unavailable";
-        try {
-            query = roleplayerService.getAll(false).stream()
-                    .map(PlayfieldDto::getPlayfieldInstances)
-                    .flatMap(Collection::stream)
-                    .map(RoleplayerController::instanceToString)
-                    .collect(Collectors.joining("&"));
-
-        } catch (Exception e) {
-            logger.error("Unable to get list of roleplayers", e);
-        }
-        query = query.replace(" ", "%20");
-        if (!query.isEmpty()) {
-            query = "?" + query;
-        }
-        if (query.length() > SWL_SUPPORTED_URL_LENGTH - 80) {
-            logger.error("Exceeding max length of SWL Browser's supported URL length {} with {}", SWL_SUPPORTED_URL_LENGTH, query.length());
-            query = query.substring(0, SWL_SUPPORTED_URL_LENGTH - 80);
-            query = query.substring(0, query.lastIndexOf(','));
-        }
-        return "redirect:/list-mod-response" + query;
-    }
-
-    private static String instanceToString(PlayfieldInstanceDto instance) {
-        String roleplayersText = instance.getRoleplayers().stream()
-                .map(RoleplayerController::roleplayerToString)
-                .collect(Collectors.joining(","));
-        return instance.getPlayfield().getName() + " " + instance.getInstanceNumber() + "=" + roleplayersText;
-    }
-
-    private static String roleplayerToString(RoleplayerDto roleplayer) {
-        String autoMeetup = "2";
-        if (roleplayer.getAutoMeetup() != null) {
-            autoMeetup = roleplayer.getAutoMeetup() ? "1" : "0";
-        }
-        return roleplayer.getPlayerId() + "_" + roleplayer.getNick() + "_" + autoMeetup;
+    public ResponseEntity<String> listMod(HttpServletRequest request, HttpMethod method, @RequestBody(required = false) String body) {
+        return proxyCall(request, method, body, String.class);
     }
 
     @RequestMapping("/list-mod-response")

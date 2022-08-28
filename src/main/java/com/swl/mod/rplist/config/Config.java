@@ -16,7 +16,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
  * Core configuration.
  */
 @Configuration
-@Import({MvcConfig.class, SecurityConfig.class})
+@Import({MvcConfig.class, SecurityConfig.class, ProxyConfig.class})
 @EntityScan(basePackageClasses = Roleplayer.class)
 @ComponentScan(basePackageClasses = RoleplayerDao.class)
 @EnableRedisRepositories(basePackageClasses = RoleplayerDao.class)
