@@ -1,0 +1,26 @@
+# Configuration for running on render.com
+# Schema documented at https://render.com/docs/yaml-spec
+services:
+  - type: web # valid values: https://render.com/docs/yaml-spec#type
+    name: swl-rplist
+    env: docker # valid values: https://render.com/docs/yaml-spec#environment
+    dockerfilePath: Dockerfile
+    plan: free
+    branch: master
+    numInstances: 1
+    healthCheckPath: /version
+    envVars:
+      - key: SERVER_PORT # Tell Spring Boot to run on port 10000
+        value: 10000
+      - key: PORT # Speed up Render.com's port detection
+        value: 10000
+      - key: REDIS_URL # Render Redis service
+        fromService:
+          name: Redis
+          type: redis
+          property: connectionString
+  - type: redis # Render Redis service
+    name: Redis
+    plan: free
+    maxmemoryPolicy: volatile-ttl
+    ipAllowList: [] # only allow internal connections
