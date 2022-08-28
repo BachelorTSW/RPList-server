@@ -14,4 +14,5 @@ WORKDIR /app
 # Copy the spring-boot-api-tutorial.jar from the maven stage to the /opt/app directory of the current stage.
 COPY --from=builder /app/target/rplist-server.jar /app
 
-ENTRYPOINT ["java","-jar","rplist-server.jar"]
+#ENTRYPOINT java $JAVA_OPTS -jar rplist-server.jar
+ENTRYPOINT java -XX:+UseContainerSupport -Xmx40M -Xms40M -Xss256k -XX:MaxMetaspaceSize=100M -XX:+UnlockDiagnosticVMOptions -XX:+TieredCompilation -XX:TieredStopAtLevel=1 -jar rplist-server.jar
