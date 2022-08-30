@@ -9,6 +9,7 @@ import com.swl.mod.rplist.service.RoleplayerService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -16,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 
@@ -34,6 +37,9 @@ public class RoleplayerController {
 
     @Autowired
     private RoleplayerService roleplayerService;
+
+    @Value("${rplist.client.mod.version}")
+    private String supportedClientModVersion;
 
     @RequestMapping(value = {"/", "/list"})
     public String list(Model model) {
@@ -81,22 +87,31 @@ public class RoleplayerController {
     }
 
     @RequestMapping("/list-mod")
-    public String listMod() {
-        String query = "List of roleplayers temporarily unavailable=1_Unavailable";
+    public String listMod(@RequestParam(name = "client-mod-version", required = false) String clientModVersion) {
+        List<String> listingEntries = new ArrayList<>();
+
+        if (!supportedClientModVersion.equals(clientModVersion)) {
+            listingEntries.add("Please download a new version of the RPList mod from CurseForge=1_Warning_0");
+            listingEntries.add("----------------------------------------=2_-------_0");
+        }
+
         try {
-            query = roleplayerService.getAll(false).stream()
+            roleplayerService.getAll(false).stream()
                     .map(PlayfieldDto::getPlayfieldInstances)
                     .flatMap(Collection::stream)
                     .map(RoleplayerController::instanceToString)
-                    .collect(Collectors.joining("&"));
+                    .forEach(listingEntries::add);
 
         } catch (Exception e) {
             logger.error("Unable to get list of roleplayers", e);
+            listingEntries.add("List of roleplayers temporarily unavailable=3_Unavailable_0");
         }
-        query = query.replace(" ", "%20");
-        if (!query.isEmpty()) {
-            query = "?" + query;
+
+        String query = String.join("&", listingEntries);
+        if (!listingEntries.isEmpty()) {
+            query = "?" + query.replace(" ", "%20");
         }
+
         if (query.length() > SWL_SUPPORTED_URL_LENGTH - 80) {
             logger.error("Exceeding max length of SWL Browser's supported URL length {} with {}", SWL_SUPPORTED_URL_LENGTH, query.length());
             query = query.substring(0, SWL_SUPPORTED_URL_LENGTH - 80);
