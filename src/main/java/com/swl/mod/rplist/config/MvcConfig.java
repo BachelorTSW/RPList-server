@@ -1,5 +1,6 @@
 package com.swl.mod.rplist.config;
 
+import com.swl.mod.rplist.controller.HealthController;
 import com.swl.mod.rplist.controller.RobotsController;
 import com.swl.mod.rplist.controller.VersionController;
 import com.swl.mod.rplist.controller.RoleplayerController;
@@ -15,6 +16,11 @@ public class MvcConfig {
     @Bean
     public VersionController helloController() {
         return new VersionController();
+    }
+
+    @Bean
+    public HealthController healthController() {
+        return new HealthController();
     }
 
     @Bean
