@@ -46,7 +46,7 @@ public enum Playfield {
     KAIDAN_OROCHI_TOWER("The Orochi Tower", 6805 , 2010),
 
     // Seasonal
-    LONELY_PATRIOT("Dungeon - The Lonely Patriot", 6407, 3000), // Samhain
+    LONELY_PATRIOT("The Lonely Patriot", 6407, 3000), // Samhain
     WAREHOUSE_BASEMENT("Warehouse Basement", 7290, 3010), // Winter
     NIFLHEIM("Dungeon - Niflheim", 6700, 3020), // Winter
     DEEP_AGARTHA("Raid - Gatekeeper Deep Agartha", 5740, 3030),
