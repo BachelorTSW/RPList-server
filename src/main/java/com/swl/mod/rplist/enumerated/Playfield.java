@@ -8,7 +8,7 @@ import java.util.Map;
 @JsonFormat(shape = JsonFormat.Shape.OBJECT)
 public enum Playfield {
 
-    UNKNOWN("Unknown", 0, 100000),
+    UNKNOWN("Other", 0, 100000),
 
     LONDON("London", 1000, 100),
     CRUSADES("London - Crusades", 7160, 105),
