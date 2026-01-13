@@ -16,6 +16,7 @@ processes = []
 [[services]]
   http_checks = []
   internal_port = 8080
+  auto_stop_machines = "off"
   processes = ["app"]
   protocol = "tcp"
   script_checks = []
